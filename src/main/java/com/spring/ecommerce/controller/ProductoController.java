@@ -59,18 +59,7 @@ public class ProductoController {
 			String nombreImagen = upload.saveImage(file);
 			producto.setImagen(nombreImagen);
 		}else {
-			//Cuando se modifica un producto y se carga la misma imagen
-			if(file.isEmpty()) {
-				Producto p = new Producto();
-				
-				//Obtengo la imagen que tenia y se la paso al producto que se está editando
-				p = productoService.get(producto.getId()).get();
-				producto.setImagen(p.getImagen());
-			}else {
-				//Cuando se modifica el producto y se cambia la imagen cargada
-				String nombreImagen = upload.saveImage(file);
-				producto.setImagen(nombreImagen);
-			}
+			
 		}
 		
 		productoService.save(producto);
@@ -93,8 +82,32 @@ public class ProductoController {
 	}
 	
 	@PostMapping("/update")
-	public String update(Producto producto) {
+	public String update(Producto producto, @RequestParam("img") MultipartFile file) throws IOException {
 		
+		Producto p = new Producto();
+		
+		//Obtengo la imagen que tenia y se la paso al producto que se está editando
+		p = productoService.get(producto.getId()).get();
+		
+		
+		//Cuando se modifica un producto y se carga la misma imagen
+		if(file.isEmpty()) {
+			
+			producto.setImagen(p.getImagen());
+		}else {
+			//Cuando se modifica el producto y se cambia la imagen cargada
+			
+			//Si la imagen cargada no es la que está por defecto
+			if(!p.getImagen().equals("default.jpg")) {
+				upload.deleteImage(p.getImagen());
+			}
+			
+			String nombreImagen = upload.saveImage(file);
+			producto.setImagen(nombreImagen);
+		}
+		
+		//Para que se mantenga el id del usuario al realizar cambios
+		producto.setUsuario(p.getUsuario());
 		productoService.update(producto);
 		
 		return "redirect:/productos";
@@ -102,6 +115,14 @@ public class ProductoController {
 	
 	@GetMapping("/delete/{id}")
 	public String delete(@PathVariable Integer id) {
+		
+		Producto p = new Producto();
+		p=productoService.get(id).get();
+		
+		//Si la imagen cargada no es la que está por defecto
+		if(!p.getImagen().equals("default.jpg")) {
+			upload.deleteImage(p.getImagen());
+		}
 		
 		productoService.delete(id);
 		
