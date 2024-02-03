@@ -1,6 +1,7 @@
 package com.spring.ecommerce.controller;
 
 
+import java.io.IOException;
 import java.util.Optional;
 
 import org.slf4j.*;
@@ -11,16 +12,22 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.spring.ecommerce.model.Producto;
 import com.spring.ecommerce.model.Usuario;
 import com.spring.ecommerce.service.ProductoService;
+import com.spring.ecommerce.service.UploadFileService;
 
 @Controller 
 @RequestMapping("/productos")
 public class ProductoController {
 	
 	private final Logger LOGGER = LoggerFactory.getLogger(ProductoController.class);
+	
+	@Autowired
+	private UploadFileService upload;
 	
 	@Autowired
 	private ProductoService productoService;
@@ -37,12 +44,34 @@ public class ProductoController {
 	}
 	
 	@PostMapping("/save")
-	public String save(Producto producto) {
+	public String save(Producto producto, @RequestParam("img") MultipartFile file) throws IOException {
 		
 		LOGGER.info("Este es el objeto de la vista {}", producto);
 		
 		Usuario u = new Usuario(1, "", "", "", "", "", "", "");
 		producto.setUsuario(u);
+		
+		//Lógica para subir la imagen y guardarla en la base de datos
+		
+		//Verificamos si es la primera vez que se sube la imagen
+		//Es decir, cuando se crea un producto, ya que no tiene ID
+		if(producto.getId()==null) {
+			String nombreImagen = upload.saveImage(file);
+			producto.setImagen(nombreImagen);
+		}else {
+			//Cuando se modifica un producto y se carga la misma imagen
+			if(file.isEmpty()) {
+				Producto p = new Producto();
+				
+				//Obtengo la imagen que tenia y se la paso al producto que se está editando
+				p = productoService.get(producto.getId()).get();
+				producto.setImagen(p.getImagen());
+			}else {
+				//Cuando se modifica el producto y se cambia la imagen cargada
+				String nombreImagen = upload.saveImage(file);
+				producto.setImagen(nombreImagen);
+			}
+		}
 		
 		productoService.save(producto);
 		
