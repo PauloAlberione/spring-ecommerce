@@ -77,9 +77,17 @@ public class HomeController {
 		detalleOrden.setTotal(producto.getPrecio()*cantidad);
 		detalleOrden.setProducto(producto);
 		
-		//Con esto añado cada detalle orden mencionado anteriormente a la Lista
-		detalles.add(detalleOrden);
+		//Validar que el producto no se añada 2 veces
+		Integer idProducto = producto.getId();
+		//El anyMatch es como un for, pero mas rapido para recorrer la Lista
+		boolean ingresado = detalles.stream().anyMatch(p -> p.getProducto().getId() == idProducto);
 		
+		if(!ingresado) {
+			//Con esto añado cada detalle orden mencionado anteriormente a la Lista
+			detalles.add(detalleOrden);
+		}
+		
+	
 		//Utilizo un métodolo lambda
 		sumaTotal = detalles.stream().mapToDouble(dt->dt.getTotal()).sum();
 		
@@ -119,6 +127,17 @@ public class HomeController {
 		model.addAttribute("orden", orden);
 		
 		return "usuario/carrito";
+	}
+	
+	@GetMapping("/getCart")
+	public String getCart(Model model) {
+		
+		
+		
+		model.addAttribute("cart", detalles);
+		model.addAttribute("orden", orden);
+		
+		return "/usuario/carrito";
 	}
 	
 }
