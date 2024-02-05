@@ -1,6 +1,7 @@
 package com.spring.ecommerce.controller;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,8 @@ import com.spring.ecommerce.model.Orden;
 import com.spring.ecommerce.model.Producto;
 import com.spring.ecommerce.model.Usuario;
 import com.spring.ecommerce.service.ProductoService;
+import com.spring.ecommerce.service.IDetalleOrdenService;
+import com.spring.ecommerce.service.IOrdenService;
 import com.spring.ecommerce.service.IUsuarioService;
 
 @Controller
@@ -34,12 +37,19 @@ public class HomeController {
 	@Autowired
 	private IUsuarioService usuarioService;
 	
+	@Autowired
+	private IOrdenService ordenService;
+	
+	@Autowired
+	private IDetalleOrdenService detalleOrdenService;
+ 	
 	//Para almacenar los detalles de la orden de compra
 	List<DetalleOrden> detalles= new ArrayList<DetalleOrden>();
 	
 	//Almacena los datos de la orden
 	Orden orden = new Orden();
 
+	//Mostrar la pantalla de inicio con los productos
 	@GetMapping("")
 	public String home(Model model) {
 		
@@ -59,10 +69,10 @@ public class HomeController {
 		
 		model.addAttribute("producto", producto);
 		
-		
 		return "usuario/productohome";
 	}
 	
+	//Lógica del carrito: Añadir producto y obtener Detalle de compra
 	@PostMapping("/cart")
 	public String addCart(@RequestParam Integer id, @RequestParam Integer cantidad, Model model) {
 		DetalleOrden detalleOrden = new DetalleOrden();
@@ -134,6 +144,7 @@ public class HomeController {
 		return "usuario/carrito";
 	}
 	
+	//Obtener carrito de compras
 	@GetMapping("/getCart")
 	public String getCart(Model model) {
 		
@@ -143,6 +154,7 @@ public class HomeController {
 		return "/usuario/carrito";
 	}
 	
+	//Guardar la orden
 	@GetMapping("/order")
 	public String order(Model model) {
 		
@@ -153,6 +165,32 @@ public class HomeController {
 		model.addAttribute("usuario", usuario);
 		
 		return "usuario/resumenorden";
+	}
+	
+	@GetMapping("/saveOrder")
+	public String saveOrder() {
+		
+		Date fechaCreacion = new Date();
+		orden.setFechaCreacion(fechaCreacion);
+		orden.setNumero(ordenService.generarNumeroOrden());
+		
+		//usuario
+		Usuario usuario = usuarioService.findById(1).get();
+		
+		orden.setUsuario(usuario);
+		ordenService.save(orden);
+		
+		//guardar detalles
+		for(DetalleOrden dt:detalles) {
+			dt.setOrden(orden);
+			detalleOrdenService.save(dt);
+		}
+		
+		//limpiar los valores de los detalles de la orden para que se añadan nuevos productos
+		orden = new Orden();
+		detalles.clear();
+		
+		return "redirect:/";
 	}
 	
 }
