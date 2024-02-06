@@ -66,7 +66,6 @@ public class DetalleOrden {
 		this.total = total;
 	}
 	
-	
 	public Orden getOrden() {
 		return orden;
 	}

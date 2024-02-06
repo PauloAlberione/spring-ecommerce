@@ -93,7 +93,6 @@ public class Orden {
 		this.usuario = usuario;
 	}
 	
-
 	public List<DetalleOrden> getDetalle() {
 		return detalle;
 	}

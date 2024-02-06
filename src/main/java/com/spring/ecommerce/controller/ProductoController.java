@@ -17,8 +17,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.spring.ecommerce.model.Producto;
 import com.spring.ecommerce.model.Usuario;
+import com.spring.ecommerce.service.IUsuarioService;
 import com.spring.ecommerce.service.ProductoService;
 import com.spring.ecommerce.service.UploadFileService;
+import com.spring.ecommerce.service.UsuarioServiceImpl;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller 
 @RequestMapping("/productos")
@@ -32,6 +36,9 @@ public class ProductoController {
 	@Autowired
 	private ProductoService productoService;
 	
+	@Autowired
+	private IUsuarioService usuarioService;
+	
 	@GetMapping("")
 	public String show(Model model) {
 		model.addAttribute("productos", productoService.findAll());
@@ -43,12 +50,13 @@ public class ProductoController {
 		return "productos/create";
 	}
 	
+	
 	@PostMapping("/save")
-	public String save(Producto producto, @RequestParam("img") MultipartFile file) throws IOException {
+	public String save(Producto producto, HttpSession sesssion, HttpSession session, @RequestParam("img") MultipartFile file) throws IOException {
 		
 		LOGGER.info("Este es el objeto de la vista {}", producto);
 		
-		Usuario u = new Usuario(1, "", "", "", "", "", "", "");
+		Usuario u = usuarioService.findById(Integer.parseInt(session.getAttribute("idusuario").toString())).get();
 		producto.setUsuario(u);
 		
 		//Lógica para subir la imagen y guardarla en la base de datos
