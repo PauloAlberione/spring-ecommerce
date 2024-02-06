@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -191,6 +192,20 @@ public class HomeController {
 		detalles.clear();
 		
 		return "redirect:/";
+	}
+	
+	@PostMapping("/search")
+	public String searchProduct(@RequestParam String nombre, Model model) {
+		log.info("Nombre del producto : {}", nombre);
+		
+		//Lógica para la búsqueda de productos, para que sea una búsqueda parcial, es decir, que la cadena ingresada esté contenida
+		//En algún lugar del nombre del producto
+		List<Producto> productos = productoService.findAll().stream().filter(p -> p.getNombre().toLowerCase().contains(nombre.toLowerCase())).collect(Collectors.toList());
+		
+		//Muestro los productos en la vista, que coincidan con la búsqueda realizada
+		model.addAttribute("productos", productos);
+		
+		return "usuario/home";
 	}
 	
 }
